@@ -1,0 +1,149 @@
+---
+title: "Homework 4"
+author: "Tyler Smith"
+date: "March 3, 2020"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+0
+```{r}
+#Problem 1
+library(datasets)
+library(dplyr)
+
+length(ChickWeight$weight)
+weight0 <- ChickWeight %>%
+  summarize(count = length(unique(Chick)),avg = mean(weight), stddev = sd(weight))
+weight0
+```
+
+```{r}
+#Problem 2
+prob2 <- ChickWeight %>%
+  group_by(Chick) %>%
+  filter(Chick == 1)
+nrow(prob2)
+ChickWeight %>%
+  group_by(Chick) %>%
+  summarize(ct = n())
+
+bad_chicks <- c(18,16,15,8,44)
+'%notin%' <- Negate('%in%')
+complete <- ChickWeight %>%
+  filter(Chick %notin% bad_chicks)
+head(complete, n=3)
+```
+
+```{r}
+#Problem 3
+weight00 <- complete %>%
+  filter(Time == 0) %>%
+  select(weight)
+head(weight00)
+c <- NULL
+for (i in 1:nrow(weight00)){
+  x <- rep(weight00[i,],12);
+  c <- c(c, x)
+}
+complete$weight00 <- c
+complete <- complete %>%
+  mutate(weightgain = weight-weight00) %>%
+  select(-weight00)
+head(complete,n=3)
+```
+
+```{r}
+#Problem 4
+library(ggplot2)
+complete %>%
+  group_by(Diet) %>%
+  summarize(med = median(weightgain))
+complete %>%
+  filter(Time==21) %>%
+  mutate(Diet = factor(Diet, levels=c("4","3","2","1"))) %>%
+  ggplot(aes(x=Diet,y=weightgain))+geom_boxplot() + expand_limits(x =0)
+```
+#Problem 4
+From the overall plot, we see that it appears that diet three has the highest mean and IQR, while diet two definitely has the widest spread. diet one has the lowerst mean, but did have some higher-end success. Diet four had the lowest floor and overall appeared to be the most consistent diet choice.  
+  
+```{r}
+#Problem 5
+#Part a
+complete %>%
+  filter(Time==21) %>%
+  summarize(maxgain = max(weightgain),mingain = min(weightgain))
+complete %>%
+  filter((Time == 21 & weightgain ==332) | (Time == 21 & weightgain ==32))
+complete %>%
+  filter(Time==21) %>%
+  arrange(weightgain)%>%
+  ggplot(aes(x=reorder(Chick,weightgain),weight = weightgain))+geom_bar()
+
+#Part b
+complete %>%
+  filter((Time == 21 & weightgain ==332) | (Time == 21 & weightgain ==32)) 
+complete %>%
+  filter(Time==21) %>%
+  arrange(weightgain)%>%
+  ggplot(aes(x=reorder(Chick,weightgain),weight = weightgain))+geom_bar()+facet_grid(~Diet)
+```
+#Problem 5  
+###Part a  
+We can see that numerically, chick 24 gained the least weight at 32 grams, while chick 35 gained the most weight at 332 grams. The bar chart shows each chick in order by their weight gain, displaying just how high and low these two chicks were comparatively. There is a steep increase/decrease for both.
+  
+###Part b  
+From the summary output, we saw that the lowest weight increase was on diet 2 while the highest was on diet 3. The plot reveals that the really low value for diet 2 is probably a strong outlier, while the chick on diet 3 actually appears to have some others that have similar results. This displays that perhaps diet 3 has a higher upside than others, while diet 2 may not have such a low basement to its effectiveness.  
+  
+```{r}
+#Problem 6
+complete %>%
+  filter(Time == 0) %>%
+  summarize(min0 = min(weight),max0 = max(weight))
+
+prob6 <- complete %>%
+  filter((Time ==0 & weight == 39) | (Time ==0 & weight == 43)) %>%
+  select(Chick)
+prob6
+complete %>%
+  filter(Chick %in% c(3,11,19,23,27,28,29,33,36,48)) %>%
+  ggplot(aes(x=Time,y=weight))+geom_line()+facet_grid(~Chick)
+```
+
+```{r}
+#Problem 7
+avg_weight <- complete %>%
+  group_by(Time) %>%
+  summarize(avg = mean(weight))
+avg_weight
+complete %>%
+  filter(Chick == 27)
+complete %>%
+  filter(Chick %in% c(3,27)) %>%
+  ggplot(aes(x=Time,y=weight,col=Chick))+geom_line()+geom_smooth(data=complete,aes(x=Time,y=weight,colour="red"),method="lm")
+
+```
+#Problem 7
+Using chick 3 for the max and chick 27 for the min, their trajectories do not seem to say much. The fitted line does not appear to do a good job modeling either, which appears to tell us that the starting weight plays very little into the final result.  
+  
+```{r}
+#Problem 8
+prob8 <- complete %>%
+  filter(Diet == 3 & Time ==21)
+complete %>%
+  filter(Diet == 3 & Time ==21) %>%
+  summarize(avg = mean(weightgain), std = sd(weightgain),med = median(weightgain))
+complete %>%
+  filter(Diet ==3 & Time ==21)
+  
+complete %>%
+  filter(Chick == 39 ) %>%
+  ggplot(aes(x=as.numeric(Time),y=weight))+geom_line()+geom_smooth(data=complete,aes(x=Time,y=weight,colour="red"),method="lm")
+  
+```
+#Problem 8
+Diet 3 appeared to work the best, so I wanted to do more analysis on that diet in particular. The plot above displays how the median weight gain value in diet three compared to the average. We can see the sharp increase towards the end of the recorded time, suggesting that diet 3 could be the best diet of choice for the chicks.
